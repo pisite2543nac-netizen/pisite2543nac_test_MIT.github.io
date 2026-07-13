@@ -374,10 +374,12 @@ function showResults(){
   });
 
   const pct = Math.round(score/questions.length*100);
+  const rawFraction = score / questions.length * 20;      // convert to full score 20
+  const finalScore = Math.floor(rawFraction + 0.5);         // round half (.5) up to nearest integer
   const scoreEl = document.getElementById('score-num');
-  scoreEl.textContent = `${score}/${questions.length}`;
-  scoreEl.classList.toggle('fail', pct<50);
-  document.getElementById('score-percent').textContent = `คิดเป็น ${pct}%`;
+  scoreEl.textContent = `${finalScore}/20`;
+  scoreEl.classList.toggle('fail', finalScore<10);
+  document.getElementById('score-percent').textContent = `ตอบถูก ${score} จาก ${questions.length} ข้อ (${pct}%)`;
 }
 
 /* ---------- ANTI-CHEAT: TAB/WINDOW SWITCH DETECTION ---------- */
