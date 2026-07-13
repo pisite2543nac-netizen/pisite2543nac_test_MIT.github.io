@@ -105,6 +105,28 @@
   .ans-line.correct-ans{color:var(--green);}
   .explain{font-size:.88rem; color:var(--subtext0); margin-top:8px; background:var(--surface1); padding:8px 10px; border-radius:8px;}
   .hidden{display:none !important;}
+
+  /* student info form */
+  .form-group{margin-bottom:16px;}
+  .form-group label{display:block; color:var(--subtext1); font-size:.9rem; margin-bottom:6px; font-weight:600;}
+  .form-group input[type="text"], .form-group input[type="email"]{
+    width:100%; background:var(--surface0); border:1px solid var(--surface1);
+    color:var(--text); padding:10px 12px; border-radius:8px; font-size:1rem; font-family:inherit;
+  }
+  .form-group input:focus{outline:none; border-color:var(--mauve);}
+  .radio-row{display:flex; gap:20px; flex-wrap:wrap;}
+  .radio-row label{display:flex; align-items:center; gap:6px; color:var(--subtext1); font-weight:400; cursor:pointer;}
+  .radio-row input{width:auto;}
+  .form-error{color:var(--red); font-size:.9rem; margin-bottom:12px; background:#3a1f2b; padding:10px 12px; border-radius:8px;}
+  .key-status{
+    background:var(--surface0); border:1px solid var(--surface1); border-radius:12px;
+    padding:16px; margin:14px 0; font-size:.92rem; color:var(--subtext1);
+  }
+  .student-summary{
+    background:var(--surface0); border-radius:10px; padding:12px 16px; margin-bottom:16px;
+    font-size:.88rem; color:var(--subtext1); display:flex; gap:18px; flex-wrap:wrap;
+  }
+  .student-summary b{color:var(--text);}
   @media(max-width:700px){
     .exam-wrap{flex-direction:column;}
     .nav-panel{width:100%; position:static;}
@@ -124,6 +146,10 @@
     <ul class="rules">
       <li>ข้อสอบมีทั้งหมด <b>50 ข้อ</b> แบบเลือกตอบ 4 ตัวเลือก (ก, ข, ค, ง) คะแนนเต็ม <b>20 คะแนน</b></li>
       <li>มีเวลาทำข้อสอบ <b>1 ชั่วโมง 15 นาที</b> เมื่อหมดเวลาระบบจะส่งคำตอบให้อัตโนมัติ</li>
+      <li>ต้องกรอก <b>ชื่อ-นามสกุล เลขท้ายรหัสนักศึกษา และห้อง</b> ก่อนเริ่มสอบทุกครั้ง</li>
+      <li>เลือกได้ว่าจะ<b>รับเฉลยทางอีเมล</b> (ต้องกรอกอีเมล) หรือ<b>ไม่รับเฉลย</b>ก็ได้</li>
+      <li>ถ้าทำข้อสอบเสร็จโดยเหลือเวลา<b>ตั้งแต่ 15 นาทีขึ้นไป</b> (ทำเร็ว) ระบบจะ<b>ไม่แสดงเฉลยบนหน้าจอทันที</b> แต่จะส่งเฉลยไปยังอีเมลแทน เพื่อป้องกันการบอกคำตอบเพื่อนที่ยังทำไม่เสร็จ</li>
+      <li><b>1 รหัสนักศึกษา สอบได้ไม่เกิน 2 ครั้ง</b> ต่อเครื่อง/เบราว์เซอร์ที่ใช้ทำข้อสอบ</li>
       <li>ต้อง<b>ตอบให้ครบทุกข้อ</b>จึงจะสามารถกดปุ่ม "ส่งข้อสอบ" ได้ (ยกเว้นกรณีหมดเวลา ระบบจะส่งให้อัตโนมัติแม้ตอบไม่ครบ)</li>
       <li>ทุกคนจะได้รับชุดคำถามชุดเดียวกัน แต่ <b>ลำดับข้อและลำดับตัวเลือกจะถูกสลับแบบสุ่ม</b> ทุกครั้งที่เปิดสอบ เพื่อป้องกันการลอกข้อสอบ</li>
       <li>สามารถเลือกทำข้อใดก่อนก็ได้ โดยใช้ปุ่มนำทางด้านข้าง หรือปุ่มถัดไป/ก่อนหน้า</li>
@@ -131,8 +157,33 @@
       <li>เมื่อทำครบและกดส่งข้อสอบ ระบบจะแสดง<b>คะแนนที่ได้</b> พร้อม<b>เฉลยและเหตุผล</b>ของทุกข้อทันที</li>
       <li>ตั้งใจทำด้วยตนเอง ไม่เปิดดูเนื้อหาช่วยหรือปรึกษาผู้อื่นระหว่างสอบ</li>
     </ul>
+    <h2>ข้อมูลผู้เข้าสอบ</h2>
+    <div class="form-group">
+      <label>ชื่อ-นามสกุล</label>
+      <input type="text" id="input-name" placeholder="เช่น สมชาย ใจดี">
+    </div>
+    <div class="form-group">
+      <label>เลขท้ายรหัสนักศึกษา</label>
+      <input type="text" id="input-studentid" placeholder="เช่น 12345">
+    </div>
+    <div class="form-group">
+      <label>ห้อง/กลุ่มเรียน</label>
+      <input type="text" id="input-room" placeholder="เช่น ปวช.2/1">
+    </div>
+    <div class="form-group">
+      <label>ต้องการรับเฉลยหรือไม่?</label>
+      <div class="radio-row">
+        <label><input type="radio" name="wantKey" value="yes" checked onchange="toggleEmailField()"> รับเฉลยทางอีเมล</label>
+        <label><input type="radio" name="wantKey" value="no" onchange="toggleEmailField()"> ไม่รับเฉลย (ไม่ต้องกรอกอีเมล)</label>
+      </div>
+    </div>
+    <div class="form-group" id="email-group">
+      <label>อีเมลสำหรับรับเฉลย</label>
+      <input type="email" id="input-email" placeholder="example@email.com">
+    </div>
+    <div class="form-error hidden" id="intro-error"></div>
     <div class="btn-row">
-      <button class="btn" onclick="startExam()">เริ่มทำข้อสอบ</button>
+      <button class="btn" onclick="handleStartClick()">เริ่มทำข้อสอบ</button>
     </div>
   </div>
 
@@ -162,13 +213,17 @@
 
   <!-- SCREEN 3: RESULTS -->
   <div id="screen-result" class="hidden card">
+    <div class="student-summary" id="student-summary"></div>
     <div class="score-hero">
       <div style="color:var(--subtext1);">คะแนนที่ได้</div>
       <div class="score-num" id="score-num">0/50</div>
       <div style="color:var(--subtext0);" id="score-percent"></div>
     </div>
-    <h2>เฉลยและเหตุผลรายข้อ</h2>
-    <div id="review-list"></div>
+    <div class="key-status hidden" id="key-status"></div>
+    <div id="review-section">
+      <h2>เฉลยและเหตุผลรายข้อ</h2>
+      <div id="review-list"></div>
+    </div>
     <div class="btn-row">
       <button class="btn" onclick="location.reload()">ทำข้อสอบใหม่</button>
     </div>
@@ -248,8 +303,70 @@ let currentQ = 0;
 let switchCount = 0;
 let examActive = false;
 const EXAM_DURATION_SECONDS = 75 * 60; // 1 ชั่วโมง 15 นาที
+const EARLY_FINISH_THRESHOLD_SECONDS = 15 * 60; // เหลือเวลา >= 15 นาที ถือว่าทำเร็ว
+const MAX_ATTEMPTS = 2;
 let timeRemaining = EXAM_DURATION_SECONDS;
 let timerInterval = null;
+let studentInfo = {name:'', studentId:'', room:'', wantsKey:true, email:''};
+let lastScore = 0;
+let lastFinalScore = 0;
+
+/* ---------- STUDENT INFO / ATTEMPT LIMIT ---------- */
+function toggleEmailField(){
+  const wantsKey = document.querySelector('input[name="wantKey"]:checked').value === 'yes';
+  document.getElementById('email-group').classList.toggle('hidden', !wantsKey);
+}
+
+function attemptKey(studentId){
+  return 'examAttempts_' + studentId.trim();
+}
+
+function getAttemptCount(studentId){
+  return parseInt(localStorage.getItem(attemptKey(studentId)) || '0', 10);
+}
+
+function incrementAttemptCount(studentId){
+  const n = getAttemptCount(studentId) + 1;
+  localStorage.setItem(attemptKey(studentId), String(n));
+  return n;
+}
+
+function showIntroError(msg){
+  const el = document.getElementById('intro-error');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+
+function handleStartClick(){
+  const name = document.getElementById('input-name').value.trim();
+  const studentId = document.getElementById('input-studentid').value.trim();
+  const room = document.getElementById('input-room').value.trim();
+  const wantsKey = document.querySelector('input[name="wantKey"]:checked').value === 'yes';
+  const email = document.getElementById('input-email').value.trim();
+  document.getElementById('intro-error').classList.add('hidden');
+
+  if(!name || !studentId || !room){
+    showIntroError('กรุณากรอกชื่อ-นามสกุล เลขท้ายรหัสนักศึกษา และห้อง ให้ครบถ้วน');
+    return;
+  }
+  if(wantsKey){
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if(!emailPattern.test(email)){
+      showIntroError('กรุณากรอกอีเมลให้ถูกต้อง หรือเลือก "ไม่รับเฉลย" หากไม่ต้องการระบุอีเมล');
+      return;
+    }
+  }
+
+  const attemptsSoFar = getAttemptCount(studentId);
+  if(attemptsSoFar >= MAX_ATTEMPTS){
+    showIntroError(`รหัสนักศึกษานี้ทำข้อสอบครบ ${MAX_ATTEMPTS} ครั้งแล้วบนเครื่อง/เบราว์เซอร์นี้ ไม่สามารถเข้าสอบเพิ่มได้อีก`);
+    return;
+  }
+
+  studentInfo = {name, studentId, room, wantsKey, email};
+  incrementAttemptCount(studentId);
+  startExam();
+}
 
 function escapeHtml(str){
   const div = document.createElement('div');
@@ -428,10 +545,64 @@ function showResults(){
   const pct = Math.round(score/questions.length*100);
   const rawFraction = score / questions.length * 20;      // convert to full score 20
   const finalScore = Math.floor(rawFraction + 0.5);         // round half (.5) up to nearest integer
+  lastScore = score;
+  lastFinalScore = finalScore;
   const scoreEl = document.getElementById('score-num');
   scoreEl.textContent = `${finalScore}/20`;
   scoreEl.classList.toggle('fail', finalScore<10);
   document.getElementById('score-percent').textContent = `ตอบถูก ${score} จาก ${questions.length} ข้อ (${pct}%)`;
+
+  document.getElementById('student-summary').innerHTML =
+    `<div>ชื่อ: <b>${escapeHtml(studentInfo.name)}</b></div>
+     <div>เลขท้ายรหัสนักศึกษา: <b>${escapeHtml(studentInfo.studentId)}</b></div>
+     <div>ห้อง: <b>${escapeHtml(studentInfo.room)}</b></div>`;
+
+  const keyStatusEl = document.getElementById('key-status');
+  const reviewSection = document.getElementById('review-section');
+  const finishedEarly = timeRemaining >= EARLY_FINISH_THRESHOLD_SECONDS;
+
+  if(!studentInfo.wantsKey){
+    reviewSection.classList.add('hidden');
+    keyStatusEl.classList.remove('hidden');
+    keyStatusEl.innerHTML = 'คุณเลือก <b>ไม่รับเฉลย</b> ระบบจะไม่แสดงเฉลยและเหตุผลของข้อสอบชุดนี้';
+  } else if(finishedEarly){
+    reviewSection.classList.add('hidden');
+    keyStatusEl.classList.remove('hidden');
+    keyStatusEl.innerHTML =
+      `คุณทำข้อสอบเสร็จเร็ว (เหลือเวลามากกว่า 15 นาที) ระบบจะ<b>ไม่แสดงเฉลยบนหน้าจอ</b>
+       เพื่อป้องกันการบอกคำตอบให้เพื่อนที่ยังทำไม่เสร็จ แต่จะส่งเฉลยไปยังอีเมล <b>${escapeHtml(studentInfo.email)}</b> แทน<br><br>
+       <button class="btn secondary" onclick="sendKeyByEmail()">เปิดอีเมลเพื่อส่งเฉลย</button>`;
+    sendKeyByEmail();
+  } else {
+    reviewSection.classList.remove('hidden');
+    keyStatusEl.classList.add('hidden');
+  }
+}
+
+function buildKeySummaryText(){
+  const letters = ['ก','ข','ค','ง'];
+  const lines = [];
+  lines.push(`ผลสอบ: ${studentInfo.name} (เลขท้าย ${studentInfo.studentId}) ห้อง ${studentInfo.room}`);
+  lines.push(`คะแนน: ${lastFinalScore}/20 (ตอบถูก ${lastScore}/${questions.length} ข้อ)`);
+  lines.push('');
+  lines.push('เฉลยรายข้อ (เลขข้อ: คำตอบของคุณ / เฉลย / ผล):');
+  questions.forEach((item, i)=>{
+    const userIdx = userAnswers[i];
+    const userLetter = userIdx===-1 ? '-' : letters[userIdx];
+    const correctLetter = letters[item.correct];
+    const mark = userIdx===item.correct ? 'ถูก' : 'ผิด';
+    lines.push(`ข้อ ${i+1}: ${userLetter}/${correctLetter} (${mark})`);
+  });
+  lines.push('');
+  lines.push('หมายเหตุ: หากต้องการเหตุผลประกอบคำตอบแบบละเอียด สามารถสอบถามอาจารย์ผู้สอนเพิ่มเติมได้');
+  return lines.join('\n');
+}
+
+function sendKeyByEmail(){
+  const subject = `ผลสอบและเฉลย - ${studentInfo.name} (${studentInfo.studentId})`;
+  const body = buildKeySummaryText();
+  const mailtoUrl = `mailto:${encodeURIComponent(studentInfo.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.location.href = mailtoUrl;
 }
 
 /* ---------- ANTI-CHEAT: TAB/WINDOW SWITCH DETECTION ---------- */
