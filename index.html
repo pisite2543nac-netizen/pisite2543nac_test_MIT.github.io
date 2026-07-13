@@ -124,6 +124,7 @@
     <ul class="rules">
       <li>ข้อสอบมีทั้งหมด <b>50 ข้อ</b> แบบเลือกตอบ 4 ตัวเลือก (ก, ข, ค, ง) คะแนนเต็ม <b>20 คะแนน</b></li>
       <li>มีเวลาทำข้อสอบ <b>1 ชั่วโมง 15 นาที</b> เมื่อหมดเวลาระบบจะส่งคำตอบให้อัตโนมัติ</li>
+      <li>ต้อง<b>ตอบให้ครบทุกข้อ</b>จึงจะสามารถกดปุ่ม "ส่งข้อสอบ" ได้ (ยกเว้นกรณีหมดเวลา ระบบจะส่งให้อัตโนมัติแม้ตอบไม่ครบ)</li>
       <li>ทุกคนจะได้รับชุดคำถามชุดเดียวกัน แต่ <b>ลำดับข้อและลำดับตัวเลือกจะถูกสลับแบบสุ่ม</b> ทุกครั้งที่เปิดสอบ เพื่อป้องกันการลอกข้อสอบ</li>
       <li>สามารถเลือกทำข้อใดก่อนก็ได้ โดยใช้ปุ่มนำทางด้านข้าง หรือปุ่มถัดไป/ก่อนหน้า</li>
       <li><b>ห้ามสลับหน้าจอ/สลับแท็บ/ย่อหน้าต่างเกิน 3 ครั้ง</b> ระหว่างทำข้อสอบ หากตรวจพบการสลับหน้าจอเกินกำหนด ระบบจะยกเลิกการสอบและให้เริ่มทำใหม่ทันที</li>
@@ -144,7 +145,7 @@
         <div class="timer-info" style="font-size:1.1rem; font-weight:700; color:var(--yellow); margin-top:6px;" id="timer-display">01:15:00</div>
         <div class="nav-grid" id="nav-grid"></div>
         <div class="timer-info">สลับหน้าจอ: <span id="switch-count">0</span>/3 ครั้ง</div>
-        <button class="btn green" style="width:100%; margin-top:14px;" onclick="submitExam()">ส่งข้อสอบ</button>
+        <button class="btn green" id="btn-submit" style="width:100%; margin-top:14px;" onclick="submitExam()">ส่งข้อสอบ</button>
       </div>
       <div class="q-panel card">
         <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
@@ -365,6 +366,10 @@ function updateNavGrid(){
   });
   const answeredN = userAnswers.filter(a=>a!==-1).length;
   document.getElementById('answered-count').textContent = `ตอบแล้ว ${answeredN}/${questions.length}`;
+  const submitBtn = document.getElementById('btn-submit');
+  const allDone = answeredN === questions.length;
+  submitBtn.disabled = !allDone;
+  submitBtn.title = allDone ? '' : 'ต้องตอบให้ครบทุกข้อก่อนจึงจะส่งข้อสอบได้';
 }
 
 function changeQ(delta){
@@ -375,7 +380,8 @@ function changeQ(delta){
 function submitExam(){
   const unanswered = userAnswers.filter(a=>a===-1).length;
   if(unanswered>0){
-    if(!confirm(`ยังเหลือ ${unanswered} ข้อที่ยังไม่ได้ตอบ ต้องการส่งข้อสอบเลยหรือไม่?`)) return;
+    alert(`ยังทำไม่ครบ! เหลืออีก ${unanswered} ข้อที่ยังไม่ได้ตอบ กรุณาตอบให้ครบทุกข้อก่อนส่งข้อสอบ`);
+    return;
   }
   finishExam();
 }
