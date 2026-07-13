@@ -147,8 +147,8 @@
       <li>ข้อสอบมีทั้งหมด <b>50 ข้อ</b> แบบเลือกตอบ 4 ตัวเลือก (ก, ข, ค, ง) คะแนนเต็ม <b>20 คะแนน</b></li>
       <li>มีเวลาทำข้อสอบ <b>1 ชั่วโมง 15 นาที</b> เมื่อหมดเวลาระบบจะส่งคำตอบให้อัตโนมัติ</li>
       <li>ต้องกรอก <b>ชื่อ-นามสกุล เลขท้ายรหัสนักศึกษา และห้อง</b> ก่อนเริ่มสอบทุกครั้ง</li>
-      <li>เลือกได้ว่าจะ<b>รับเฉลยทางอีเมล</b> (ต้องกรอกอีเมล) หรือ<b>ไม่รับเฉลย</b>ก็ได้</li>
-      <li>ถ้าทำข้อสอบเสร็จโดยเหลือเวลา<b>ตั้งแต่ 15 นาทีขึ้นไป</b> (ทำเร็ว) ระบบจะ<b>ไม่แสดงเฉลยบนหน้าจอทันที</b> แต่จะส่งเฉลยไปยังอีเมลแทน เพื่อป้องกันการบอกคำตอบเพื่อนที่ยังทำไม่เสร็จ</li>
+      <li>เลือกได้ว่าจะ<b>รับเฉลย</b>หรือ<b>ไม่รับเฉลย</b>ก็ได้</li>
+      <li>เมื่อส่งข้อสอบแล้ว หากเลือกรับเฉลย ระบบจะ<b>นับถอยหลัง 15 นาที</b>ก่อน แล้วจึง<b>เปิดเฉลยให้ดูบนหน้าเว็บนี้โดยอัตโนมัติ</b> เพื่อป้องกันการบอกคำตอบให้เพื่อนที่ยังทำไม่เสร็จ</li>
       <li><b>1 รหัสนักศึกษา สอบได้ไม่เกิน 2 ครั้ง</b> ต่อเครื่อง/เบราว์เซอร์ที่ใช้ทำข้อสอบ</li>
       <li>ต้อง<b>ตอบให้ครบทุกข้อ</b>จึงจะสามารถกดปุ่ม "ส่งข้อสอบ" ได้ (ยกเว้นกรณีหมดเวลา ระบบจะส่งให้อัตโนมัติแม้ตอบไม่ครบ)</li>
       <li>ทุกคนจะได้รับชุดคำถามชุดเดียวกัน แต่ <b>ลำดับข้อและลำดับตัวเลือกจะถูกสลับแบบสุ่ม</b> ทุกครั้งที่เปิดสอบ เพื่อป้องกันการลอกข้อสอบ</li>
@@ -160,7 +160,7 @@
     <h2>ข้อมูลผู้เข้าสอบ</h2>
     <div class="form-group">
       <label>ชื่อ-นามสกุล</label>
-      <input type="text" id="input-name" placeholder="เช่น นาย เมียงปร่ะ ประโด้ย">
+      <input type="text" id="input-name" placeholder="เช่น สมชาย ใจดี">
     </div>
     <div class="form-group">
       <label>เลขท้ายรหัสนักศึกษา</label>
@@ -173,13 +173,9 @@
     <div class="form-group">
       <label>ต้องการรับเฉลยหรือไม่?</label>
       <div class="radio-row">
-        <label><input type="radio" name="wantKey" value="yes" checked onchange="toggleEmailField()"> รับเฉลยทางอีเมล</label>
-        <label><input type="radio" name="wantKey" value="no" onchange="toggleEmailField()"> ไม่รับเฉลย (ไม่ต้องกรอกอีเมล)</label>
+        <label><input type="radio" name="wantKey" value="yes" checked> รับเฉลย</label>
+        <label><input type="radio" name="wantKey" value="no"> ไม่รับเฉลย</label>
       </div>
-    </div>
-    <div class="form-group" id="email-group">
-      <label>อีเมลสำหรับรับเฉลย</label>
-      <input type="email" id="input-email" placeholder="example@email.com">
     </div>
     <div class="form-error hidden" id="intro-error"></div>
     <div class="btn-row">
@@ -220,7 +216,11 @@
       <div style="color:var(--subtext0);" id="score-percent"></div>
     </div>
     <div class="key-status hidden" id="key-status"></div>
-    <div id="review-section">
+    <div class="key-status hidden" id="reveal-countdown-box">
+      <div>เฉลยจะเปิดให้ดูอัตโนมัติในอีก</div>
+      <div style="font-size:1.6rem; font-weight:800; color:var(--yellow); margin-top:6px;" id="reveal-countdown">15:00</div>
+    </div>
+    <div id="review-section" class="hidden">
       <h2>เฉลยและเหตุผลรายข้อ</h2>
       <div id="review-list"></div>
     </div>
@@ -303,20 +303,16 @@ let currentQ = 0;
 let switchCount = 0;
 let examActive = false;
 const EXAM_DURATION_SECONDS = 75 * 60; // 1 ชั่วโมง 15 นาที
-const EARLY_FINISH_THRESHOLD_SECONDS = 15 * 60; // เหลือเวลา >= 15 นาที ถือว่าทำเร็ว
+const REVEAL_DELAY_SECONDS = 15 * 60;  // รอ 15 นาทีหลังส่งข้อสอบ ก่อนเปิดเฉลยบนหน้าเว็บ
 const MAX_ATTEMPTS = 2;
 let timeRemaining = EXAM_DURATION_SECONDS;
 let timerInterval = null;
-let studentInfo = {name:'', studentId:'', room:'', wantsKey:true, email:''};
+let revealInterval = null;
+let studentInfo = {name:'', studentId:'', room:'', wantsKey:true};
 let lastScore = 0;
 let lastFinalScore = 0;
 
 /* ---------- STUDENT INFO / ATTEMPT LIMIT ---------- */
-function toggleEmailField(){
-  const wantsKey = document.querySelector('input[name="wantKey"]:checked').value === 'yes';
-  document.getElementById('email-group').classList.toggle('hidden', !wantsKey);
-}
-
 function attemptKey(studentId){
   return 'examAttempts_' + studentId.trim();
 }
@@ -342,19 +338,11 @@ function handleStartClick(){
   const studentId = document.getElementById('input-studentid').value.trim();
   const room = document.getElementById('input-room').value.trim();
   const wantsKey = document.querySelector('input[name="wantKey"]:checked').value === 'yes';
-  const email = document.getElementById('input-email').value.trim();
   document.getElementById('intro-error').classList.add('hidden');
 
   if(!name || !studentId || !room){
     showIntroError('กรุณากรอกชื่อ-นามสกุล เลขท้ายรหัสนักศึกษา และห้อง ให้ครบถ้วน');
     return;
-  }
-  if(wantsKey){
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if(!emailPattern.test(email)){
-      showIntroError('กรุณากรอกอีเมลให้ถูกต้อง หรือเลือก "ไม่รับเฉลย" หากไม่ต้องการระบุอีเมล');
-      return;
-    }
   }
 
   const attemptsSoFar = getAttemptCount(studentId);
@@ -363,7 +351,7 @@ function handleStartClick(){
     return;
   }
 
-  studentInfo = {name, studentId, room, wantsKey, email};
+  studentInfo = {name, studentId, room, wantsKey};
   incrementAttemptCount(studentId);
   startExam();
 }
@@ -558,51 +546,46 @@ function showResults(){
      <div>ห้อง: <b>${escapeHtml(studentInfo.room)}</b></div>`;
 
   const keyStatusEl = document.getElementById('key-status');
+  const countdownBox = document.getElementById('reveal-countdown-box');
   const reviewSection = document.getElementById('review-section');
-  const finishedEarly = timeRemaining >= EARLY_FINISH_THRESHOLD_SECONDS;
 
   if(!studentInfo.wantsKey){
     reviewSection.classList.add('hidden');
+    countdownBox.classList.add('hidden');
     keyStatusEl.classList.remove('hidden');
     keyStatusEl.innerHTML = 'คุณเลือก <b>ไม่รับเฉลย</b> ระบบจะไม่แสดงเฉลยและเหตุผลของข้อสอบชุดนี้';
-  } else if(finishedEarly){
-    reviewSection.classList.add('hidden');
-    keyStatusEl.classList.remove('hidden');
-    keyStatusEl.innerHTML =
-      `คุณทำข้อสอบเสร็จเร็ว (เหลือเวลามากกว่า 15 นาที) ระบบจะ<b>ไม่แสดงเฉลยบนหน้าจอ</b>
-       เพื่อป้องกันการบอกคำตอบให้เพื่อนที่ยังทำไม่เสร็จ แต่จะส่งเฉลยไปยังอีเมล <b>${escapeHtml(studentInfo.email)}</b> แทน<br><br>
-       <button class="btn secondary" onclick="sendKeyByEmail()">เปิดอีเมลเพื่อส่งเฉลย</button>`;
-    sendKeyByEmail();
   } else {
-    reviewSection.classList.remove('hidden');
+    reviewSection.classList.add('hidden');
     keyStatusEl.classList.add('hidden');
+    countdownBox.classList.remove('hidden');
+    startRevealCountdown();
   }
 }
 
-function buildKeySummaryText(){
-  const letters = ['ก','ข','ค','ง'];
-  const lines = [];
-  lines.push(`ผลสอบ: ${studentInfo.name} (เลขท้าย ${studentInfo.studentId}) ห้อง ${studentInfo.room}`);
-  lines.push(`คะแนน: ${lastFinalScore}/20 (ตอบถูก ${lastScore}/${questions.length} ข้อ)`);
-  lines.push('');
-  lines.push('เฉลยรายข้อ (เลขข้อ: คำตอบของคุณ / เฉลย / ผล):');
-  questions.forEach((item, i)=>{
-    const userIdx = userAnswers[i];
-    const userLetter = userIdx===-1 ? '-' : letters[userIdx];
-    const correctLetter = letters[item.correct];
-    const mark = userIdx===item.correct ? 'ถูก' : 'ผิด';
-    lines.push(`ข้อ ${i+1}: ${userLetter}/${correctLetter} (${mark})`);
-  });
-  lines.push('');
-  lines.push('หมายเหตุ: หากต้องการเหตุผลประกอบคำตอบแบบละเอียด สามารถสอบถามอาจารย์ผู้สอนเพิ่มเติมได้');
-  return lines.join('\n');
-}
+function startRevealCountdown(){
+  let remaining = REVEAL_DELAY_SECONDS;
+  const countdownEl = document.getElementById('reveal-countdown');
+  const countdownBox = document.getElementById('reveal-countdown-box');
+  const reviewSection = document.getElementById('review-section');
 
-function sendKeyByEmail(){
-  const subject = `ผลสอบและเฉลย - ${studentInfo.name} (${studentInfo.studentId})`;
-  const body = buildKeySummaryText();
-  const mailtoUrl = `mailto:${encodeURIComponent(studentInfo.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  window.location.href = mailtoUrl;
+  const update = ()=>{
+    const m = Math.floor(remaining/60);
+    const s = remaining%60;
+    countdownEl.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  };
+  update();
+
+  clearInterval(revealInterval);
+  revealInterval = setInterval(()=>{
+    remaining--;
+    if(remaining <= 0){
+      clearInterval(revealInterval);
+      countdownBox.classList.add('hidden');
+      reviewSection.classList.remove('hidden');
+    } else {
+      update();
+    }
+  }, 1000);
 }
 
 /* ---------- ANTI-CHEAT: TAB/WINDOW SWITCH DETECTION ---------- */
