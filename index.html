@@ -245,6 +245,12 @@ let currentQ = 0;
 let switchCount = 0;
 let examActive = false;
 
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
 function shuffleArray(arr){
   const a = arr.slice();
   for(let i=a.length-1;i>0;i--){
@@ -300,7 +306,7 @@ function renderQuestion(){
   item.options.forEach((opt, i)=>{
     const label = document.createElement('label');
     if(userAnswers[currentQ]===i) label.classList.add('selected');
-    label.innerHTML = `<input type="radio" name="opt" ${userAnswers[currentQ]===i?'checked':''}> ${letters[i]}. ${opt}`;
+    label.innerHTML = `<input type="radio" name="opt" ${userAnswers[currentQ]===i?'checked':''}> ${letters[i]}. ${escapeHtml(opt)}`;
     label.onclick = ()=>{
       userAnswers[currentQ] = i;
       renderQuestion();
@@ -355,14 +361,14 @@ function showResults(){
     div.className = 'review-item ' + (isCorrect ? 'correct' : 'wrong');
     let userLine = userIdx===-1
       ? `<div class="ans-line user-wrong">คำตอบของคุณ: ไม่ได้ตอบ</div>`
-      : `<div class="ans-line ${isCorrect?'':'user-wrong'}">คำตอบของคุณ: ${letters[userIdx]}. ${item.options[userIdx]}</div>`;
-    let correctLine = isCorrect ? '' : `<div class="ans-line correct-ans">คำตอบที่ถูกต้อง: ${letters[item.correct]}. ${item.options[item.correct]}</div>`;
+      : `<div class="ans-line ${isCorrect?'':'user-wrong'}">คำตอบของคุณ: ${letters[userIdx]}. ${escapeHtml(item.options[userIdx])}</div>`;
+    let correctLine = isCorrect ? '' : `<div class="ans-line correct-ans">คำตอบที่ถูกต้อง: ${letters[item.correct]}. ${escapeHtml(item.options[item.correct])}</div>`;
 
     div.innerHTML = `
-      <div class="qn">ข้อที่ ${i+1}: ${item.q}</div>
+      <div class="qn">ข้อที่ ${i+1}: ${escapeHtml(item.q)}</div>
       ${userLine}
       ${correctLine}
-      <div class="explain">เหตุผล: ${item.explain}</div>
+      <div class="explain">เหตุผล: ${escapeHtml(item.explain)}</div>
     `;
     listEl.appendChild(div);
   });
