@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ข้อสอบ: การเขียนโปรแกรมเบื้องต้น, UX/UI, HTML และ CSS</title>
+<style>
+  :root{
+    --base:#1e1e2e; --mantle:#181825; --crust:#11111b;
+    --text:#cdd6f4; --subtext1:#bac2de; --subtext0:#a6adc8;
+    --surface0:#313244; --surface1:#45475a; --surface2:#585b70;
+    --blue:#89b4fa; --lavender:#b4befe; --sapphire:#74c7ec;
+    --green:#a6e3a1; --red:#f38ba8; --yellow:#f9e2af; --peach:#fab387;
+    --mauve:#cba6f7; --pink:#f5c2e7; --teal:#94e2d5;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:'Sarabun','Segoe UI',sans-serif;
+    background:var(--crust);
+    color:var(--text);
+    min-height:100vh;
+    line-height:1.6;
+  }
+  .app{max-width:900px; margin:0 auto; padding:24px 16px 80px;}
+  .card{
+    background:var(--base);
+    border:1px solid var(--surface0);
+    border-radius:14px;
+    padding:28px;
+    box-shadow:0 8px 24px rgba(0,0,0,.35);
+  }
+  h1{color:var(--mauve); font-size:1.5rem; margin-bottom:8px;}
+  h2{color:var(--lavender); font-size:1.15rem; margin:18px 0 10px;}
+  p{color:var(--subtext1); margin-bottom:10px;}
+  .badge{
+    display:inline-block; background:var(--surface0); color:var(--sapphire);
+    padding:3px 10px; border-radius:999px; font-size:.8rem; margin-bottom:14px;
+  }
+  ul.rules{margin:10px 0 10px 20px; color:var(--subtext1);}
+  ul.rules li{margin-bottom:8px;}
+  .btn{
+    background:var(--mauve); color:var(--crust); border:none;
+    padding:12px 22px; border-radius:10px; font-size:1rem; font-weight:700;
+    cursor:pointer; transition:.15s; font-family:inherit;
+  }
+  .btn:hover{filter:brightness(1.1); transform:translateY(-1px);}
+  .btn.secondary{background:var(--surface1); color:var(--text);}
+  .btn.green{background:var(--green); color:var(--crust);}
+  .btn:disabled{opacity:.4; cursor:not-allowed; transform:none;}
+  .btn-row{display:flex; gap:10px; margin-top:20px; flex-wrap:wrap;}
+
+  /* exam layout */
+  .exam-wrap{display:flex; gap:18px; align-items:flex-start;}
+  .nav-panel{
+    background:var(--base); border:1px solid var(--surface0); border-radius:14px;
+    padding:16px; width:190px; flex-shrink:0; position:sticky; top:16px;
+  }
+  .nav-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-top:10px;}
+  .nav-grid button{
+    aspect-ratio:1; border:1px solid var(--surface1); background:var(--surface0);
+    color:var(--subtext1); border-radius:6px; font-size:.75rem; cursor:pointer;
+  }
+  .nav-grid button.answered{background:var(--sapphire); color:var(--crust); border-color:var(--sapphire);}
+  .nav-grid button.current{outline:2px solid var(--yellow);}
+  .timer-info{font-size:.8rem; color:var(--subtext0); margin-top:14px;}
+
+  .q-panel{flex:1; min-width:0;}
+  .progress-bar{height:8px; background:var(--surface0); border-radius:6px; overflow:hidden; margin-bottom:16px;}
+  .progress-fill{height:100%; background:linear-gradient(90deg,var(--mauve),var(--sapphire)); transition:.2s;}
+  .q-text{font-size:1.05rem; color:var(--text); margin-bottom:16px; font-weight:600;}
+  .options label{
+    display:block; background:var(--surface0); border:1px solid var(--surface1);
+    padding:12px 14px; border-radius:10px; margin-bottom:10px; cursor:pointer; transition:.12s;
+  }
+  .options label:hover{border-color:var(--sapphire);}
+  .options label.selected{border-color:var(--mauve); background:#3a3350;}
+  .options input{margin-right:10px;}
+
+  /* lockout overlay */
+  .overlay{
+    position:fixed; inset:0; background:rgba(17,17,27,.96); z-index:999;
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .overlay .box{
+    background:var(--base); border:1px solid var(--red); border-radius:16px;
+    padding:36px; max-width:440px; text-align:center;
+  }
+  .overlay h2{color:var(--red); font-size:1.4rem; margin-bottom:14px;}
+
+  /* results */
+  .score-hero{
+    text-align:center; padding:20px 0 10px;
+  }
+  .score-num{font-size:3rem; font-weight:800; color:var(--green);}
+  .score-num.fail{color:var(--red);}
+  .review-item{
+    background:var(--surface0); border-radius:12px; padding:16px; margin-bottom:14px;
+    border-left:4px solid var(--surface2);
+  }
+  .review-item.correct{border-left-color:var(--green);}
+  .review-item.wrong{border-left-color:var(--red);}
+  .review-item .qn{font-weight:700; color:var(--text); margin-bottom:8px;}
+  .ans-line{font-size:.92rem; margin-bottom:4px;}
+  .ans-line.user-wrong{color:var(--red);}
+  .ans-line.correct-ans{color:var(--green);}
+  .explain{font-size:.88rem; color:var(--subtext0); margin-top:8px; background:var(--surface1); padding:8px 10px; border-radius:8px;}
+  .hidden{display:none !important;}
+  @media(max-width:700px){
+    .exam-wrap{flex-direction:column;}
+    .nav-panel{width:100%; position:static;}
+    .nav-grid{grid-template-columns:repeat(10,1fr);}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SCREEN 1: INSTRUCTIONS -->
+  <div id="screen-intro" class="card">
+    <span class="badge">ข้อสอบปรนัย 4 ตัวเลือก · 50 ข้อ</span>
+    <h1>ข้อสอบ: การเขียนโปรแกรมเบื้องต้น, UX/UI, HTML และ CSS</h1>
+    <p>กรุณาอ่านคำชี้แจงก่อนเริ่มทำข้อสอบให้ครบถ้วน</p>
+    <h2>คำชี้แจง</h2>
+    <ul class="rules">
+      <li>ข้อสอบมีทั้งหมด <b>50 ข้อ</b> แบบเลือกตอบ 4 ตัวเลือก (ก, ข, ค, ง)</li>
+      <li>ทุกคนจะได้รับชุดคำถามชุดเดียวกัน แต่ <b>ลำดับข้อและลำดับตัวเลือกจะถูกสลับแบบสุ่ม</b> ทุกครั้งที่เปิดสอบ เพื่อป้องกันการลอกข้อสอบ</li>
+      <li>สามารถเลือกทำข้อใดก่อนก็ได้ โดยใช้ปุ่มนำทางด้านข้าง หรือปุ่มถัดไป/ก่อนหน้า</li>
+      <li><b>ห้ามสลับหน้าจอ/สลับแท็บ/ย่อหน้าต่างเกิน 3 ครั้ง</b> ระหว่างทำข้อสอบ หากตรวจพบการสลับหน้าจอเกินกำหนด ระบบจะยกเลิกการสอบและให้เริ่มทำใหม่ทันที</li>
+      <li>เมื่อทำครบและกดส่งข้อสอบ ระบบจะแสดง<b>คะแนนที่ได้</b> พร้อม<b>เฉลยและเหตุผล</b>ของทุกข้อทันที</li>
+      <li>ตั้งใจทำด้วยตนเอง ไม่เปิดดูเนื้อหาช่วยหรือปรึกษาผู้อื่นระหว่างสอบ</li>
+    </ul>
+    <div class="btn-row">
+      <button class="btn" onclick="startExam()">เริ่มทำข้อสอบ</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: EXAM -->
+  <div id="screen-exam" class="hidden">
+    <div class="exam-wrap">
+      <div class="nav-panel">
+        <div style="font-weight:700; color:var(--text);">ข้อสอบ 50 ข้อ</div>
+        <div class="timer-info" id="answered-count">ตอบแล้ว 0/50</div>
+        <div class="nav-grid" id="nav-grid"></div>
+        <div class="timer-info">สลับหน้าจอ: <span id="switch-count">0</span>/3 ครั้ง</div>
+        <button class="btn green" style="width:100%; margin-top:14px;" onclick="submitExam()">ส่งข้อสอบ</button>
+      </div>
+      <div class="q-panel card">
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+        <div style="color:var(--subtext0); font-size:.85rem; margin-bottom:8px;" id="q-index-label"></div>
+        <div class="q-text" id="q-text"></div>
+        <div class="options" id="q-options"></div>
+        <div class="btn-row">
+          <button class="btn secondary" id="btn-prev" onclick="changeQ(-1)">ก่อนหน้า</button>
+          <button class="btn secondary" id="btn-next" onclick="changeQ(1)">ถัดไป</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: RESULTS -->
+  <div id="screen-result" class="hidden card">
+    <div class="score-hero">
+      <div style="color:var(--subtext1);">คะแนนที่ได้</div>
+      <div class="score-num" id="score-num">0/50</div>
+      <div style="color:var(--subtext0);" id="score-percent"></div>
+    </div>
+    <h2>เฉลยและเหตุผลรายข้อ</h2>
+    <div id="review-list"></div>
+    <div class="btn-row">
+      <button class="btn" onclick="location.reload()">ทำข้อสอบใหม่</button>
+    </div>
+  </div>
+
+  <!-- LOCKOUT OVERLAY -->
+  <div id="overlay" class="overlay hidden">
+    <div class="box">
+      <h2>⚠️ ตรวจพบการสลับหน้าจอเกินกำหนด</h2>
+      <p>ระบบตรวจพบว่ามีการสลับหน้าจอ/สลับแท็บระหว่างทำข้อสอบเกิน 3 ครั้ง เพื่อความเป็นธรรมในการสอบ ข้อสอบชุดนี้ถูกยกเลิก</p>
+      <p style="color:var(--yellow); font-weight:700;">กลับไปสอบใหม่</p>
+      <button class="btn" style="margin-top:10px;" onclick="location.reload()">เริ่มสอบใหม่</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ---------- QUESTION BANK ---------- */
+const RAW_QUESTIONS = [
+{q:"HTML ย่อมาจากอะไร?", options:["Hyper Text Markup Language","High Tech Modern Language","Hyper Transfer Markup Language","Home Tool Markup Language"], correct:0, explain:"HTML ย่อมาจาก Hyper Text Markup Language เป็นภาษาโครงสร้างหลักของหน้าเว็บ"},
+{q:"แท็กใดใช้สำหรับสร้างลิงก์ในหน้าเว็บ?", options:["<link>","<a>","<href>","<url>"], correct:1, explain:"<a> คือแท็กที่ใช้สร้างลิงก์ โดยระบุปลายทางผ่านแอตทริบิวต์ href"},
+{q:"แท็กใดใช้แสดงรูปภาพ?", options:["<picture>","<src>","<img>","<image>"], correct:2, explain:"<img> ใช้แสดงรูปภาพ โดยระบุแหล่งที่มาผ่านแอตทริบิวต์ src"},
+{q:"แอตทริบิวต์ alt ใน <img> มีไว้เพื่ออะไร?", options:["กำหนดขนาดรูป","กำหนดข้อความอธิบายรูปกรณีโหลดไม่ได้หรือเพื่อการเข้าถึง","กำหนดสีพื้นหลัง","กำหนดลิงก์ของรูป"], correct:1, explain:"alt ใช้ระบุข้อความทดแทนเมื่อรูปโหลดไม่สำเร็จ และช่วยด้าน accessibility เช่น screen reader"},
+{q:"แท็กใดใช้สร้างตารางในหน้าเว็บ?", options:["<table>","<tab>","<grid>","<list>"], correct:0, explain:"<table> คือแท็กหลักสำหรับสร้างตาราง ร่วมกับ <tr> และ <td>"},
+{q:"แท็กใดใช้ครอบเนื้อหาหลักที่แสดงผลในหน้าเว็บ?", options:["<body>","<head>","<meta>","<title>"], correct:0, explain:"<body> คือส่วนที่บรรจุเนื้อหาทั้งหมดที่แสดงผลบนหน้าเว็บ"},
+{q:"แท็กใดใช้กำหนดหัวข้อระดับใหญ่ที่สุด?", options:["<h6>","<head>","<h1>","<header>"], correct:2, explain:"<h1> เป็นหัวข้อระดับสูงสุดในลำดับ h1-h6"},
+{q:"แท็กใดเป็นตัวครอบหลักขององค์ประกอบรับข้อมูลจากผู้ใช้ในหน้าเว็บ?", options:["<input>","<form>","<field>","<data>"], correct:1, explain:"<form> เป็นแท็กหลักที่ครอบองค์ประกอบรับข้อมูล ส่วน <input> ใช้สร้างช่องกรอกแต่ละช่องภายใน form"},
+{q:"แท็กใดเป็น semantic tag ที่ใช้ระบุส่วนหัวของเว็บไซต์?", options:["<div>","<header>","<top>","<section>"], correct:1, explain:"<header> เป็น semantic tag ที่สื่อความหมายว่าเป็นส่วนหัวของเว็บไซต์หรือส่วนใดส่วนหนึ่ง"},
+{q:"การเขียนคอมเมนต์ใน HTML ใช้รูปแบบใด?", options:["// comment","/* comment */","<!-- comment -->","# comment"], correct:2, explain:"HTML ใช้รูปแบบ <!-- comment --> สำหรับเขียนข้อความที่ไม่ถูกแสดงผล"},
+{q:"แท็กใดใช้จัดกลุ่มเนื้อหาแบบ block โดยไม่มีความหมายเชิงความหมาย (non-semantic)?", options:["<section>","<article>","<div>","<span>"], correct:2, explain:"<div> เป็น generic container แบบ block ที่ไม่สื่อความหมายพิเศษ ต่างจาก <section> หรือ <article>"},
+{q:"แอตทริบิวต์ใดใช้ระบุปลายทางของลิงก์?", options:["src","href","alt","target"], correct:1, explain:"href (Hypertext Reference) ใช้ระบุ URL ปลายทางของลิงก์"},
+{q:"แท็กใดใช้สร้างรายการแบบไม่มีลำดับ (bullet list)?", options:["<ol>","<ul>","<li>","<list>"], correct:1, explain:"<ul> คือ unordered list ใช้ร่วมกับ <li> เพื่อสร้างรายการแบบจุด"},
+{q:"เวอร์ชันของ HTML ที่ใช้กันแพร่หลายในปัจจุบันคือ?", options:["HTML3","HTML4","HTML5","XHTML2"], correct:2, explain:"HTML5 เป็นเวอร์ชันปัจจุบันที่รองรับ semantic tag, multimedia และฟีเจอร์ใหม่ ๆ"},
+{q:"การฝัง CSS ไว้ในแท็ก <style> ภายใน <head> ของไฟล์ HTML เรียกว่าวิธีใด?", options:["Inline CSS","Internal CSS","External CSS","Embedded JS"], correct:1, explain:"การเขียน CSS ในแท็ก <style> ภายในเอกสารเดียวกันเรียกว่า Internal CSS"},
+{q:"CSS ย่อมาจากอะไร?", options:["Cascading Style Sheets","Creative Style System","Computer Style Sheets","Colorful Style Sheets"], correct:0, explain:"CSS ย่อมาจาก Cascading Style Sheets ใช้กำหนดรูปแบบการแสดงผลของ HTML"},
+{q:"คุณสมบัติ (property) ใดใช้กำหนดสีตัวอักษร?", options:["background-color","color","font-color","text-color"], correct:1, explain:"color คือ property ที่ใช้กำหนดสีของข้อความใน CSS"},
+{q:"Selector ใดใช้เลือก element ตาม class?", options:["#classname",".classname","*classname","classname"], correct:1, explain:"เครื่องหมายจุด (.) นำหน้าชื่อ ใช้เลือก element ตาม class attribute"},
+{q:"Selector ใดใช้เลือก element ตาม id?", options:[".id","#id","@id","id{}"], correct:1, explain:"เครื่องหมาย # นำหน้าชื่อ ใช้เลือก element ตาม id attribute"},
+{q:"Box Model ของ CSS เรียงลำดับจากในสุดไปนอกสุดอย่างไร?", options:["Margin, Border, Padding, Content","Content, Padding, Border, Margin","Border, Content, Margin, Padding","Padding, Margin, Content, Border"], correct:1, explain:"ลำดับ Box Model คือ Content อยู่ในสุด ตามด้วย Padding, Border และ Margin อยู่นอกสุด"},
+{q:"คุณสมบัติใดใช้จัดตำแหน่งองค์ประกอบแบบยืดหยุ่นในแนวเดียว (แนวนอนหรือแนวตั้ง)?", options:["display: grid","display: flex","display: block","display: table"], correct:1, explain:"display: flex เปิดใช้งาน Flexbox ซึ่งจัดเรียง element ตามแกนหลักแนวเดียว"},
+{q:"ใน Flexbox คุณสมบัติ justify-content ใช้ทำอะไร?", options:["จัดแนวแกนขวาง (cross axis)","จัดแนวแกนหลัก (main axis)","กำหนดขนาด element","กำหนดสีพื้นหลัง"], correct:1, explain:"justify-content ใช้จัดตำแหน่งองค์ประกอบตามแกนหลัก (main axis) ของ flex container"},
+{q:"หน่วยใดใน CSS มีขนาดสัมพัทธ์กับขนาดฟอนต์ของ root element (html)?", options:["px","em","rem","%"], correct:2, explain:"rem (root em) อ้างอิงขนาดฟอนต์ของ root element เสมอ ต่างจาก em ที่อ้างอิง parent"},
+{q:"Media query ใน CSS ใช้เพื่อจุดประสงค์ใด?", options:["เปลี่ยนภาษาเว็บ","ทำให้เว็บ responsive ตามขนาดหน้าจอ","เพิ่มความเร็วเว็บ","เชื่อมต่อฐานข้อมูล"], correct:1, explain:"Media query ใช้กำหนด style ที่ต่างกันตามขนาดหน้าจอ ทำให้เว็บปรับตัว (responsive) ได้"},
+{q:"คุณสมบัติ position: fixed มีพฤติกรรมอย่างไร?", options:["เลื่อนตามการ scroll ปกติ","ยึดตำแหน่งกับ viewport ไม่เลื่อนตาม scroll","ยึดตำแหน่งกับ parent element","ไม่มีผลต่อตำแหน่ง"], correct:1, explain:"position: fixed ทำให้ element ยึดติดกับหน้าจอ (viewport) ไม่เลื่อนไปตามการ scroll"},
+{q:"CSS Grid ใช้คุณสมบัติใดกำหนดจำนวนคอลัมน์?", options:["grid-rows","grid-template-columns","column-count","flex-columns"], correct:1, explain:"grid-template-columns ใช้กำหนดจำนวนและขนาดของคอลัมน์ใน CSS Grid"},
+{q:"การกำหนด font-weight: bold มีผลอย่างไร?", options:["ทำให้ตัวอักษรเอียง","ทำให้ตัวอักษรหนา","ทำให้ตัวอักษรขีดเส้นใต้","ทำให้ตัวอักษรเล็กลง"], correct:1, explain:"font-weight: bold ทำให้น้ำหนักเส้นตัวอักษรหนาขึ้น"},
+{q:"Pseudo-class :hover ใช้ในกรณีใด?", options:["เมื่อ element ถูกคลิก","เมื่อเมาส์ชี้อยู่บน element","เมื่อหน้าเว็บโหลดเสร็จ","เมื่อ element ถูกซ่อน"], correct:1, explain:":hover จะทำงานเมื่อผู้ใช้นำเมาส์ไปชี้อยู่บน element นั้น"},
+{q:"Selector ใดมีลำดับความสำคัญ (specificity) สูงที่สุด?", options:["Element selector","Class selector","ID selector","Universal selector (*)"], correct:2, explain:"ID selector มีค่า specificity สูงกว่า class และ element selector"},
+{q:"คุณสมบัติใดใช้ทำให้มุมของกล่องโค้งมน?", options:["border-style","border-corner","border-radius","corner-round"], correct:2, explain:"border-radius ใช้กำหนดความโค้งของมุมกล่อง"},
+{q:"UX ย่อมาจากอะไร?", options:["User Experience","User Extension","Universal Experience","User Exchange"], correct:0, explain:"UX ย่อมาจาก User Experience หมายถึงประสบการณ์โดยรวมของผู้ใช้ต่อผลิตภัณฑ์"},
+{q:"UI ย่อมาจากอะไร?", options:["User Interaction","User Interface","Universal Interface","User Input"], correct:1, explain:"UI ย่อมาจาก User Interface หมายถึงส่วนติดต่อที่ผู้ใช้มองเห็นและโต้ตอบด้วย"},
+{q:"หลักการออกแบบใดเน้นให้ผู้ใช้เข้าใจความสำคัญขององค์ประกอบผ่านขนาดและตำแหน่ง?", options:["Consistency","Visual Hierarchy","Feedback","Accessibility"], correct:1, explain:"Visual Hierarchy คือการจัดลำดับความสำคัญด้วยขนาด สี ตำแหน่ง เพื่อนำสายตาผู้ใช้"},
+{q:"การออกแบบที่คำนึงถึงผู้ใช้ที่มีข้อจำกัดทางร่างกาย เช่น การมองเห็นหรือการได้ยิน เรียกว่าอะไร?", options:["Responsive Design","Accessibility","Prototyping","Wireframing"], correct:1, explain:"Accessibility คือการออกแบบให้ทุกคนเข้าถึงและใช้งานได้ รวมถึงผู้ที่มีข้อจำกัดทางร่างกาย"},
+{q:"Wireframe คืออะไร?", options:["โค้ดโปรแกรมสำเร็จรูป","ภาพร่างโครงสร้างหน้าจอแบบง่ายก่อนออกแบบจริง","ไฟล์เสียงประกอบเว็บ","ระบบฐานข้อมูล"], correct:1, explain:"Wireframe เป็นภาพร่างเบื้องต้นที่แสดงโครงสร้างและตำแหน่งองค์ประกอบ ก่อนลงรายละเอียดการออกแบบ"},
+{q:"หลักการ Consistency (ความสม่ำเสมอ) ใน UI design หมายถึงอะไร?", options:["ใช้สีที่แตกต่างกันในทุกหน้า","ใช้รูปแบบปุ่มและองค์ประกอบที่เหมือนกันตลอดทั้งระบบ","เปลี่ยนโครงสร้างเมนูทุกหน้า","ไม่ต้องมีมาตรฐานการออกแบบ"], correct:1, explain:"Consistency คือการรักษารูปแบบองค์ประกอบให้เหมือนกันทั่วทั้งระบบ ช่วยให้ผู้ใช้เรียนรู้และคาดเดาการใช้งานได้ง่าย"},
+{q:"Call-to-Action (CTA) หมายถึงอะไร?", options:["ปุ่มหรือองค์ประกอบที่กระตุ้นให้ผู้ใช้ทำการกระทำบางอย่าง","หน้าจอแสดงข้อผิดพลาด","เมนูนำทางของเว็บไซต์","ฟอนต์ที่ใช้ในเว็บไซต์"], correct:0, explain:"CTA คือองค์ประกอบ เช่น ปุ่ม ที่ออกแบบมาเพื่อกระตุ้นให้ผู้ใช้ทำการกระทำ เช่น 'สมัครสมาชิก' หรือ 'ซื้อเลย'"},
+{q:"การทดสอบให้ผู้ใช้จริงทดลองใช้งานเพื่อประเมินการใช้งาน เรียกว่าอะไร?", options:["Usability Testing","Unit Testing","Load Testing","A/B Coding"], correct:0, explain:"Usability Testing คือการทดสอบกับผู้ใช้จริงเพื่อประเมินว่าการออกแบบใช้งานง่ายหรือไม่"},
+{q:"ความสำคัญของ Contrast (ความต่างของสีข้อความกับพื้นหลัง) คืออะไร?", options:["ทำให้เว็บโหลดเร็วขึ้น","ช่วยให้อ่านง่ายและเข้าถึงได้สำหรับผู้ใช้ทุกกลุ่ม","ลดขนาดไฟล์เว็บ","เพิ่มจำนวนสีในเว็บ"], correct:1, explain:"Contrast ที่ดีช่วยให้ข้อความอ่านง่ายขึ้น โดยเฉพาะกับผู้ใช้ที่มีสายตาไม่ปกติ"},
+{q:"Responsive Design หมายถึงอะไร?", options:["เว็บที่ตอบสนองต่อการคลิกเร็ว","เว็บที่ปรับเลย์เอาต์ให้เหมาะกับขนาดหน้าจอต่าง ๆ โดยอัตโนมัติ","เว็บที่ใช้ภาษาโปรแกรมมิ่งหลายภาษา","เว็บที่ไม่มีรูปภาพ"], correct:1, explain:"Responsive Design คือการออกแบบเว็บให้ปรับเปลี่ยนเลย์เอาต์ตามขนาดหน้าจอของอุปกรณ์โดยอัตโนมัติ"},
+{q:"ตัวแปร (Variable) ในการเขียนโปรแกรมคืออะไร?", options:["คำสั่งแสดงผลลัพธ์","ที่เก็บข้อมูลที่สามารถเปลี่ยนแปลงค่าได้","ชื่อไฟล์โปรแกรม","ข้อผิดพลาดของโปรแกรม"], correct:1, explain:"ตัวแปรคือชื่อที่ใช้อ้างอิงตำแหน่งเก็บข้อมูล ซึ่งค่าภายในสามารถเปลี่ยนแปลงได้ระหว่างการทำงานของโปรแกรม"},
+{q:"โครงสร้างควบคุมแบบเงื่อนไข (Conditional) ที่พบบ่อยที่สุดคือข้อใด?", options:["for loop","if-else","function","array"], correct:1, explain:"if-else เป็นโครงสร้างควบคุมแบบเงื่อนไขพื้นฐานที่ใช้ตัดสินใจว่าจะทำงานส่วนใด"},
+{q:"Loop (การวนซ้ำ) ในการเขียนโปรแกรมมีไว้เพื่ออะไร?", options:["เก็บข้อมูลถาวร","ทำงานคำสั่งซ้ำ ๆ ตามเงื่อนไขที่กำหนด","แสดงผลลัพธ์เพียงครั้งเดียว","หยุดการทำงานของโปรแกรมทันที"], correct:1, explain:"Loop ใช้สั่งให้โปรแกรมทำงานชุดคำสั่งเดิมซ้ำ ๆ จนกว่าจะครบเงื่อนไขที่กำหนด"},
+{q:"ฟังก์ชัน (Function) ในการเขียนโปรแกรมมีประโยชน์อย่างไร?", options:["ทำให้โปรแกรมทำงานช้าลง","รวมกลุ่มคำสั่งไว้ใช้ซ้ำและช่วยจัดระเบียบโค้ด","ลบข้อมูลออกจากโปรแกรมอัตโนมัติ","เปลี่ยนภาษาโปรแกรมมิ่งที่ใช้"], correct:1, explain:"Function ช่วยรวมกลุ่มคำสั่งที่ใช้บ่อยไว้เรียกใช้ซ้ำ ทำให้โค้ดเป็นระเบียบและดูแลรักษาง่ายขึ้น"},
+{q:"ชนิดข้อมูล (Data Type) ใดใช้เก็บค่าจริงหรือเท็จ?", options:["String","Integer","Boolean","Array"], correct:2, explain:"Boolean คือชนิดข้อมูลที่เก็บค่าได้เพียง true หรือ false เท่านั้น"},
+{q:"Array (อาร์เรย์) คืออะไร?", options:["ตัวแปรที่เก็บค่าได้เพียงค่าเดียว","โครงสร้างข้อมูลที่เก็บค่าหลายค่าเรียงกัน","คำสั่งเงื่อนไขในการเขียนโปรแกรม","ฟังก์ชันสำหรับคำนวณตัวเลข"], correct:1, explain:"Array คือโครงสร้างข้อมูลที่ใช้เก็บค่าหลายค่าไว้ในตัวแปรเดียว โดยเข้าถึงได้ผ่านลำดับ (index)"},
+{q:"ภาษาโปรแกรมมิ่งใดทำงานฝั่ง client-side ในเว็บเบราว์เซอร์เป็นหลัก?", options:["PHP","JavaScript","Python","SQL"], correct:1, explain:"JavaScript เป็นภาษาที่ทำงานฝั่ง client (เบราว์เซอร์) เพื่อสร้างการโต้ตอบบนหน้าเว็บ"},
+{q:"Syntax Error หมายถึงอะไร?", options:["ข้อผิดพลาดด้านตรรกะของโปรแกรม","ข้อผิดพลาดจากการเขียนโค้ดผิดรูปแบบไวยากรณ์","ความเร็วในการทำงานของโปรแกรม","ขนาดไฟล์ของโปรแกรม"], correct:1, explain:"Syntax Error เกิดจากการเขียนโค้ดผิดกฎไวยากรณ์ของภาษานั้น ทำให้โปรแกรมไม่สามารถทำงานได้"},
+{q:"Comment ในโค้ดโปรแกรมมีไว้เพื่ออะไร?", options:["ให้โปรแกรมทำงานเร็วขึ้น","อธิบายโค้ดโดยไม่ถูกประมวลผลเป็นคำสั่ง","เก็บข้อมูลของผู้ใช้งาน","เชื่อมต่อกับฐานข้อมูล"], correct:1, explain:"Comment ใช้เขียนคำอธิบายประกอบโค้ดเพื่อให้เข้าใจง่ายขึ้น โดยตัวแปลภาษาจะข้ามไม่ประมวลผลส่วนนี้"},
+{q:"การ Debug คืออะไร?", options:["การเขียนโค้ดใหม่ทั้งหมด","กระบวนการค้นหาและแก้ไขข้อผิดพลาดในโปรแกรม","การลบไฟล์โปรแกรมทิ้ง","การเพิ่มความเร็วอินเทอร์เน็ต"], correct:1, explain:"Debug คือกระบวนการค้นหาสาเหตุและแก้ไขข้อผิดพลาด (bug) ที่เกิดขึ้นในโปรแกรม"}
+];
+
+/* ---------- STATE ---------- */
+let questions = [];      // shuffled, with shuffled options
+let userAnswers = [];    // index of chosen option per question, -1 if unanswered
+let currentQ = 0;
+let switchCount = 0;
+let examActive = false;
+
+function shuffleArray(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function buildShuffledQuestions(){
+  const shuffledQ = shuffleArray(RAW_QUESTIONS);
+  return shuffledQ.map(item=>{
+    const optIndices = shuffleArray([0,1,2,3]);
+    const newOptions = optIndices.map(i=>item.options[i]);
+    const newCorrect = optIndices.indexOf(item.correct);
+    return {q:item.q, options:newOptions, correct:newCorrect, explain:item.explain};
+  });
+}
+
+/* ---------- EXAM FLOW ---------- */
+function startExam(){
+  questions = buildShuffledQuestions();
+  userAnswers = new Array(questions.length).fill(-1);
+  currentQ = 0;
+  switchCount = 0;
+  examActive = true;
+  document.getElementById('screen-intro').classList.add('hidden');
+  document.getElementById('screen-exam').classList.remove('hidden');
+  buildNavGrid();
+  renderQuestion();
+}
+
+function buildNavGrid(){
+  const grid = document.getElementById('nav-grid');
+  grid.innerHTML = '';
+  questions.forEach((_, i)=>{
+    const b = document.createElement('button');
+    b.textContent = i+1;
+    b.onclick = ()=>{ currentQ = i; renderQuestion(); };
+    grid.appendChild(b);
+  });
+}
+
+function renderQuestion(){
+  const item = questions[currentQ];
+  document.getElementById('q-index-label').textContent = `ข้อที่ ${currentQ+1} จาก ${questions.length}`;
+  document.getElementById('q-text').textContent = item.q;
+  document.getElementById('progress-fill').style.width = ((currentQ+1)/questions.length*100)+'%';
+
+  const optWrap = document.getElementById('q-options');
+  optWrap.innerHTML = '';
+  const letters = ['ก','ข','ค','ง'];
+  item.options.forEach((opt, i)=>{
+    const label = document.createElement('label');
+    if(userAnswers[currentQ]===i) label.classList.add('selected');
+    label.innerHTML = `<input type="radio" name="opt" ${userAnswers[currentQ]===i?'checked':''}> ${letters[i]}. ${opt}`;
+    label.onclick = ()=>{
+      userAnswers[currentQ] = i;
+      renderQuestion();
+      updateNavGrid();
+    };
+    optWrap.appendChild(label);
+  });
+
+  document.getElementById('btn-prev').disabled = currentQ===0;
+  document.getElementById('btn-next').disabled = currentQ===questions.length-1;
+  updateNavGrid();
+}
+
+function updateNavGrid(){
+  const grid = document.getElementById('nav-grid');
+  [...grid.children].forEach((b,i)=>{
+    b.classList.toggle('answered', userAnswers[i]!==-1);
+    b.classList.toggle('current', i===currentQ);
+  });
+  const answeredN = userAnswers.filter(a=>a!==-1).length;
+  document.getElementById('answered-count').textContent = `ตอบแล้ว ${answeredN}/${questions.length}`;
+}
+
+function changeQ(delta){
+  currentQ = Math.min(questions.length-1, Math.max(0, currentQ+delta));
+  renderQuestion();
+}
+
+function submitExam(){
+  const unanswered = userAnswers.filter(a=>a===-1).length;
+  if(unanswered>0){
+    if(!confirm(`ยังเหลือ ${unanswered} ข้อที่ยังไม่ได้ตอบ ต้องการส่งข้อสอบเลยหรือไม่?`)) return;
+  }
+  examActive = false;
+  document.getElementById('screen-exam').classList.add('hidden');
+  document.getElementById('screen-result').classList.remove('hidden');
+  showResults();
+}
+
+function showResults(){
+  let score = 0;
+  const listEl = document.getElementById('review-list');
+  listEl.innerHTML = '';
+  const letters = ['ก','ข','ค','ง'];
+
+  questions.forEach((item, i)=>{
+    const userIdx = userAnswers[i];
+    const isCorrect = userIdx === item.correct;
+    if(isCorrect) score++;
+
+    const div = document.createElement('div');
+    div.className = 'review-item ' + (isCorrect ? 'correct' : 'wrong');
+    let userLine = userIdx===-1
+      ? `<div class="ans-line user-wrong">คำตอบของคุณ: ไม่ได้ตอบ</div>`
+      : `<div class="ans-line ${isCorrect?'':'user-wrong'}">คำตอบของคุณ: ${letters[userIdx]}. ${item.options[userIdx]}</div>`;
+    let correctLine = isCorrect ? '' : `<div class="ans-line correct-ans">คำตอบที่ถูกต้อง: ${letters[item.correct]}. ${item.options[item.correct]}</div>`;
+
+    div.innerHTML = `
+      <div class="qn">ข้อที่ ${i+1}: ${item.q}</div>
+      ${userLine}
+      ${correctLine}
+      <div class="explain">เหตุผล: ${item.explain}</div>
+    `;
+    listEl.appendChild(div);
+  });
+
+  const pct = Math.round(score/questions.length*100);
+  const scoreEl = document.getElementById('score-num');
+  scoreEl.textContent = `${score}/${questions.length}`;
+  scoreEl.classList.toggle('fail', pct<50);
+  document.getElementById('score-percent').textContent = `คิดเป็น ${pct}%`;
+}
+
+/* ---------- ANTI-CHEAT: TAB/WINDOW SWITCH DETECTION ---------- */
+document.addEventListener('visibilitychange', ()=>{
+  if(document.hidden && examActive){
+    switchCount++;
+    document.getElementById('switch-count').textContent = switchCount;
+    if(switchCount > 3){
+      triggerLockout();
+    }
+  }
+});
+
+function triggerLockout(){
+  examActive = false;
+  document.getElementById('overlay').classList.remove('hidden');
+}
+</script>
+</body>
+</html>
