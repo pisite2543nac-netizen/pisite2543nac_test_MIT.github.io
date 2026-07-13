@@ -122,7 +122,8 @@
     <p>กรุณาอ่านคำชี้แจงก่อนเริ่มทำข้อสอบให้ครบถ้วน</p>
     <h2>คำชี้แจง</h2>
     <ul class="rules">
-      <li>ข้อสอบมีทั้งหมด <b>50 ข้อ</b> แบบเลือกตอบ 4 ตัวเลือก (ก, ข, ค, ง)</li>
+      <li>ข้อสอบมีทั้งหมด <b>50 ข้อ</b> แบบเลือกตอบ 4 ตัวเลือก (ก, ข, ค, ง) คะแนนเต็ม <b>20 คะแนน</b></li>
+      <li>มีเวลาทำข้อสอบ <b>1 ชั่วโมง 15 นาที</b> เมื่อหมดเวลาระบบจะส่งคำตอบให้อัตโนมัติ</li>
       <li>ทุกคนจะได้รับชุดคำถามชุดเดียวกัน แต่ <b>ลำดับข้อและลำดับตัวเลือกจะถูกสลับแบบสุ่ม</b> ทุกครั้งที่เปิดสอบ เพื่อป้องกันการลอกข้อสอบ</li>
       <li>สามารถเลือกทำข้อใดก่อนก็ได้ โดยใช้ปุ่มนำทางด้านข้าง หรือปุ่มถัดไป/ก่อนหน้า</li>
       <li><b>ห้ามสลับหน้าจอ/สลับแท็บ/ย่อหน้าต่างเกิน 3 ครั้ง</b> ระหว่างทำข้อสอบ หากตรวจพบการสลับหน้าจอเกินกำหนด ระบบจะยกเลิกการสอบและให้เริ่มทำใหม่ทันที</li>
@@ -140,6 +141,7 @@
       <div class="nav-panel">
         <div style="font-weight:700; color:var(--text);">ข้อสอบ 50 ข้อ</div>
         <div class="timer-info" id="answered-count">ตอบแล้ว 0/50</div>
+        <div class="timer-info" style="font-size:1.1rem; font-weight:700; color:var(--yellow); margin-top:6px;" id="timer-display">01:15:00</div>
         <div class="nav-grid" id="nav-grid"></div>
         <div class="timer-info">สลับหน้าจอ: <span id="switch-count">0</span>/3 ครั้ง</div>
         <button class="btn green" style="width:100%; margin-top:14px;" onclick="submitExam()">ส่งข้อสอบ</button>
@@ -244,6 +246,9 @@ let userAnswers = [];    // index of chosen option per question, -1 if unanswere
 let currentQ = 0;
 let switchCount = 0;
 let examActive = false;
+const EXAM_DURATION_SECONDS = 75 * 60; // 1 ชั่วโมง 15 นาที
+let timeRemaining = EXAM_DURATION_SECONDS;
+let timerInterval = null;
 
 function escapeHtml(str){
   const div = document.createElement('div');
@@ -277,10 +282,42 @@ function startExam(){
   currentQ = 0;
   switchCount = 0;
   examActive = true;
+  timeRemaining = EXAM_DURATION_SECONDS;
   document.getElementById('screen-intro').classList.add('hidden');
   document.getElementById('screen-exam').classList.remove('hidden');
   buildNavGrid();
   renderQuestion();
+  startTimer();
+}
+
+function formatTime(sec){
+  const h = Math.floor(sec/3600);
+  const m = Math.floor((sec%3600)/60);
+  const s = sec%60;
+  return [h,m,s].map(v=>String(v).padStart(2,'0')).join(':');
+}
+
+function startTimer(){
+  updateTimerDisplay();
+  clearInterval(timerInterval);
+  timerInterval = setInterval(()=>{
+    if(!examActive){ clearInterval(timerInterval); return; }
+    timeRemaining--;
+    updateTimerDisplay();
+    if(timeRemaining <= 0){
+      clearInterval(timerInterval);
+      timeRemaining = 0;
+      updateTimerDisplay();
+      alert('หมดเวลาทำข้อสอบ ระบบจะส่งคำตอบให้อัตโนมัติ');
+      forceSubmitExam();
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay(){
+  const el = document.getElementById('timer-display');
+  el.textContent = formatTime(timeRemaining);
+  el.style.color = timeRemaining <= 300 ? 'var(--red)' : 'var(--yellow)';
 }
 
 function buildNavGrid(){
@@ -340,7 +377,16 @@ function submitExam(){
   if(unanswered>0){
     if(!confirm(`ยังเหลือ ${unanswered} ข้อที่ยังไม่ได้ตอบ ต้องการส่งข้อสอบเลยหรือไม่?`)) return;
   }
+  finishExam();
+}
+
+function forceSubmitExam(){
+  finishExam();
+}
+
+function finishExam(){
   examActive = false;
+  clearInterval(timerInterval);
   document.getElementById('screen-exam').classList.add('hidden');
   document.getElementById('screen-result').classList.remove('hidden');
   showResults();
@@ -395,6 +441,7 @@ document.addEventListener('visibilitychange', ()=>{
 
 function triggerLockout(){
   examActive = false;
+  clearInterval(timerInterval);
   document.getElementById('overlay').classList.remove('hidden');
 }
 </script>
